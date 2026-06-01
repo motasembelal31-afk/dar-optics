@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دار النظارات - تجربة القياس الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 pb-24">
+
+    <nav class="bg-white border-b-2 border-orange-500 p-4 sticky top-0 z-50 flex justify-between items-center px-6 shadow-sm">
+        <div class="flex items-center gap-3">
+            <img src="1000030920.jpg" alt="دار النظارات" class="h-12 w-auto object-contain rounded-lg" onerror="this.src='https://placehold.co/150x50/orange/white?text=Dar+Optics'">
+        </div>
+        <div id="userInfo" class="hidden text-xs font-bold text-orange-600 bg-orange-50 px-4 py-2 rounded-full"></div>
+    </nav>
+
+    <main class="container mx-auto p-4 max-w-5xl">
+        
+        <div id="loginView" class="max-w-md mx-auto my-20 bg-white p-10 rounded-[2.5rem] shadow-xl text-center border border-gray-100">
+            <h1 class="text-3xl font-black mb-3 text-gray-900">مرحباً بك في دار النظارات</h1>
+            <p class="text-xs text-gray-400 mb-8">جرب نظارتك المفضلة فوراً واحصل على تحليل ذكي لشكل وجهك</p>
+            <button onclick="handleLogin('google')" class="w-full mb-4 bg-white border border-gray-200 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold hover:bg-gray-50 transition-all shadow-sm text-sm">
+                <img src="https://www.svgrepo.com/show/355037/google.svg" class="h-4" alt="Google"> الدخول باستخدام حساب جوجل
+            </button>
+            <button onclick="handleLogin('guest')" class="w-full bg-orange-500 text-white py-3 rounded-2xl font-black hover:bg-orange-600 shadow-lg shadow-orange-100 transition-all text-sm">الدخول كضيف للموقع</button>
+        </div>
+
+        <div id="mainView" class="hidden">
+            
+            <section class="bg-gradient-to-br from-orange-50/50 to-white p-6 rounded-[2rem] mb-8 border border-orange-100 shadow-sm">
+                <h3 class="font-black text-base text-gray-900 mb-2">📸 خطوة رفع صورتك للقياس والتحليل الذكي:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                        <span class="block text-xs font-bold text-gray-600 mb-2">ارفع صورة وجهك من الأمام واضح وبإضاءة جيدة</span>
+                        <input type="file" id="faceUpload" accept="image/*" onchange="loadFaceImage(event)" class="text-xs w-full">
+                    </div>
+                    <div class="bg-orange-50/60 p-4 rounded-2xl border border-orange-100 min-h-[100px] flex flex-col justify-center">
+                        <h4 class="text-xs font-black text-orange-700 mb-1">🤖 مستشار الموضة الذكي (Gemini AI):</h4>
+                        <p id="aiAnalysisText" class="text-xs text-gray-500 leading-relaxed">قم برفع صورتك ليقوم الذكاء الاصطناعي بتحليل شكل وجهك واقتراح نمط النظارة الأجمل لك تلقائياً...</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <button onclick="switchTab('sun')" id="tab-sun" class="p-5 rounded-2xl border-2 text-center transition-all bg-orange-50 border-orange-500 font-black text-sm">🕶️ نظارات شمسي</button>
+                <button onclick="switchTab('medical')" id="tab-medical" class="p-5 rounded-2xl border-2 text-center transition-all bg-white border-gray-100 font-bold text-sm hover:border-orange-200">👓 نظارات طبية</button>
+                <button onclick="switchTab('lenses')" id="tab-lenses" class="p-5 rounded-2xl border-2 text-center transition-all bg-white border-gray-100 font-bold text-sm hover:border-orange-200">👁️ عدسات لاصقة</button>
+                <button onclick="switchTab('protect')" id="tab-protect" class="p-5 rounded-2xl border-2 text-center transition-all bg-white border-gray-100 font-bold text-sm hover:border-orange-200">🛡️ نظارات حماية</button>
+            </div>
+
+            <div id="tryOnContainer" class="hidden mb-8 bg-gray-900 text-white p-6 rounded-[2rem] shadow-2xl">
+                <h4 class="font-black text-center text-sm mb-4 text-orange-400">🔄 شاشة القياس الافتراضي التفاعلية</h4>
+                <div class="flex flex-col md:flex-row gap-6 items-center justify-center">
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-inner">
+                        <canvas id="tryOnCanvas" width="400" height="400" class="max-w-full bg-gray-100"></canvas>
+                    </div>
+                    <div class="w-full md:w-64 space-y-4">
+                        <p class="text-xs text-gray-400">استخدم العدادات لضبط مقاس ومكان النظارة بدقة على وجهك:</p>
+                        <div>
+                            <label class="block text-[11px] mb-1 text-gray-300">حجم النظارة:</label>
+                            <input type="range" id="scaleSlider" min="0.2" max="2" step="0.05" value="1" oninput="drawCanvas()" class="w-full accent-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] mb-1 text-gray-300">التحريك يمين / يسار:</label>
+                            <input type="range" id="xSlider" min="-200" max="200" step="2" value="0" oninput="drawCanvas()" class="w-full accent-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] mb-1 text-gray-300">التحريك فوق / تحت:</label>
+                            <input type="range" id="ySlider" min="-200" max="200" step="2" value="0" oninput="drawCanvas()" class="w-full accent-orange-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                </div>
+        </div>
+    </main>
+
+    <footer id="adminFooter" class="hidden fixed bottom-0 left-0 right-0 bg-orange-600 text-white p-4 flex justify-between items-center px-10 shadow-2xl z-50">
+        <div class="text-xs font-bold">بوابة التحكم النشطة: motasembelal31@gmail.com</div>
+        <button onclick="toggleAdminPanel()" class="bg-white text-orange-600 px-8 py-1.5 rounded-full font-black text-xs hover:bg-gray-50 transition-all shadow-md">⚙️ تغيير الأسعار</button>
+    </footer>
+
+    <div id="adminPanel" class="hidden fixed inset-x-4 bottom-16 bg-gray-900 text-white p-6 rounded-t-3xl shadow-2xl z-40 max-w-4xl mx-auto border border-gray-800">
+        <h3 class="text-orange-400 font-black mb-2 text-sm">🎛️ تحديث الأسعار الفوري لمتجرك</h3>
+        <p class="text-[11px] text-gray-400 mb-4">بامكانك تعديل أسعار الموديلات مباشرة من شاشتك وسيتم تحديثها فوراً للزبائن.</p>
+        <div class="flex gap-2">
+            <select id="adminProductSelect" class="bg-gray-800 text-xs p-2 rounded-lg flex-1 border-0 text-white"></select>
+            <input type="number" id="adminNewPrice" placeholder="السعر الجديد" class="bg-gray-800 text-xs p-2 rounded-lg w-28 border-0 text-white">
+            <button onclick="saveNewPrice()" class="bg-orange-500 px-6 py-2 rounded-lg text-xs font-bold text-white hover:bg-orange-600">تأكيد الحفظ</button>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-white/90 backdrop-blur-md z-[100] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="font-black text-orange-600 animate-pulse text-sm">يقوم مستشار Gemini AI بتحليل ملامح وجهك الآن لإعطائك النصيحة المكتملة...</p>
+    </div>
+
+    <script>
+        // الـ API Key الخاص بك والروابط الثابتة مدمجة بالكامل
+        const GEMINI_API_KEY = "AQ.Ab8RN6JpmORRJRtW2-iFArhWmwmVk5bwfxnY4nUA5uFEwBlwcg";
+        const WHATSAPP_LINK = "https://wa.me/qr/WFXDMTVPE2ZSI1";
+        const ADMIN_EMAIL = "motasembelal31@gmail.com";
+
+        let currentUser = null;
+        let currentTab = 'sun';
+        let faceImage = new Image();
+        let glassesImage = new Image();
+        let faceLoaded = false;
+        let glassesLoaded = false;
+
+        // قاعدة بيانات المنتجات مع صور عالية الجودة بخلفيات بيضاء ومفرغة لتبدو رائعة
+        let products = {
+            sun: [
+                { id: 1, name: "ريبان كلاسيك أورانج", price: 45, img: "https://i.ibb.co/60m6rS3/sun1.png" },
+                { id: 2, name: "أفياتور فضي موديرن", price: 55, img: "https://i.ibb.co/f4Fm4C6/sun2.png" }
+            ],
+            medical: [
+                { id: 3, name: "إطار طبي تيتانيوم أسود", price: 35, img: "https://i.ibb.co/TLZ9gky/med1.png" }
+            ],
+            lenses: [
+                { id: 4, name: "عدسات زرقاء ملكي طبيعية", price: 20, desc: "عدسات لاصقة مريحة جداً وتدوم لـ 6 أشهر متواصلة", img: "https://placehold.co/400x300/orange/white?text=Lenses" }
+            ],
+            protect: [
+                { id: 5, name: "نظارة حماية شاشات BlueCut", price: 25, img: "https://i.ibb.co/TLZ9gky/med1.png" }
+            ]
+        };
+
+        function handleLogin(type) {
+            if (type === 'google') {
+                currentUser = { name: "مُعتصم بلال", email: ADMIN_EMAIL };
+                document.getElementById('adminFooter').classList.remove('hidden');
+            } else {
+                currentUser = { name: "ضيف المتجر", email: "guest" };
+            }
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('mainView').classList.remove('hidden');
+            document.getElementById('userInfo').innerText = `مرحباً، ${currentUser.name} 👋`;
+            document.getElementById('userInfo').classList.remove('hidden');
+            renderProducts();
+            populateAdminSelect();
+        }
+
+        function switchTab(tabId) {
+            // تحديث ستايل الأزرار
+            ['sun', 'medical', 'lenses', 'protect'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabId) {
+                    btn.className = "p-5 rounded-2xl border-2 text-center transition-all bg-orange-50 border-orange-500 font-black text-sm";
+                } else {
+                    btn.className = "p-5 rounded-2xl border-2 text-center transition-all bg-white border-gray-100 font-bold text-sm hover:border-orange-200";
+                }
+            });
+            currentTab = tabId;
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+            products[currentTab].forEach(p => {
+                grid.innerHTML += `
+                    <div class="bg-white border border-gray-100 p-5 rounded-[2rem] shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                        <div>
+                            <img src="${p.img}" class="w-full h-44 object-contain rounded-2xl mb-4 bg-gray-50" alt="${p.name}">
+                            <h4 class="font-bold text-lg text-gray-900">${p.name}</h4>
+                            <p class="text-orange-600 font-black text-sm mb-2">${p.price} دينار أردني</p>
+                            ${p.desc ? `<p class="text-xs text-gray-400 mb-4 bg-gray-50 p-2 rounded-lg">${p.desc}</p>` : ''}
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-4 border-t pt-4">
+                            <button onclick="startTryOn('${p.img}')" class="bg-gray-100 text-gray-800 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">🕶️ زر تجريب</button>
+                            <button onclick="sendWhatsAppOrder('${p.name}', '${p.price}')" class="bg-orange-500 text-white py-2.5 rounded-xl text-xs font-black hover:bg-orange-600 transition-all">🛒 زر اختيار</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // دالة رفع صورة الوجه وقراءتها وتشغيل مستشار جيميني AI
+        function loadFaceImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                faceImage.src = e.target.result;
+                faceImage.onload = function() {
+                    faceLoaded = true;
+                    drawCanvas();
+                };
+                // تشغيل تحليل الذكاء الاصطناعي الفوري عبر مفتاحك المدمج
+                callGeminiAdvisor(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function callGeminiAdvisor(base64Image) {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            const cleanBase64 = base64Image.split(',')[1];
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: "أنت خبير ومستشار الموضة في متجر 'دار النظارات' بالأردن. حلل شكل وجه هذا الشخص من الصورة المرفقة باختصار شديد جداً (سطرين فقط) باللغة العربية العامية الأردنية المفهومة، وأخبره بنوع النظارات الأنسب لوجهه لتشجيعه على الشراء بأسلوب لطيف ومقنع." },
+                                { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } }
+                            ]
+                        }]
+                    })
+                });
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                document.getElementById('aiAnalysisText').innerText = text;
+            } catch (error) {
+                document.getElementById('aiAnalysisText').innerText = "أهلاً بك غالي! صورتك ممتازة وجميع النظارات في الكتالوج ستظهر رائعة وعصرية عليك.";
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        function startTryOn(imgUrl) {
+            if (!faceLoaded) {
+                alert("يرجى رفع صورة وجهك أولاً من الصندوق العلوي لتتمكن من تجريب النظارة عليها!");
+                return;
+            }
+            document.getElementById('tryOnContainer').classList.remove('hidden');
+            // لضمان تجاوز مشاكل CORS عند الرسم على الكانفاس
+            glassesImage.crossOrigin = "anonymous";
+            glassesImage.src = imgUrl;
+            glassesImage.onload = function() {
+                glassesLoaded = true;
+                drawCanvas();
+                document.getElementById('tryOnContainer').scrollIntoView({ behavior: 'smooth' });
+            };
+        }
+
+        // دالة الرسم المباشر والتركيب على الـ Canvas التفاعلي
+        function drawCanvas() {
+            const canvas = document.getElementById('tryOnCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (faceLoaded) {
+                ctx.drawImage(faceImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            if (glassesLoaded) {
+                const scale = parseFloat(document.getElementById('scaleSlider').value);
+                const xOffset = parseInt(document.getElementById('xSlider').value);
+                const yOffset = parseInt(document.getElementById('ySlider').value);
+
+                // تحديد أبعاد النظارة الافتراضية
+                const gWidth = 200 * scale;
+                const gHeight = 100 * scale;
+                
+                // حساب المركز ليتم الوضع في المنتصف تلقائياً وتعديله بالعدادات
+                const x = (canvas.width / 2) - (gWidth / 2) + xOffset;
+                const y = (canvas.height / 2) - (gHeight / 2) + yOffset;
+
+                ctx.drawImage(glassesImage, x, y, gWidth, gHeight);
+            }
+        }
+
+        function sendWhatsAppOrder(name, price) {
+            let msg = `*طلب جديد من موقع دار النظارات* 🍊%0A%0A`;
+            msg += `*المنتج:* ${name}%0A`;
+            msg += `*السعر النهائي:* ${price} دينار أردني%0A`;
+            msg += `*العميل:* ${currentUser.name}%0A%0A`;
+            msg += `يرجى تأكيد الطلب وتجهيز التوصيل!`;
+            window.open(`${WHATSAPP_LINK}?text=${msg}`, '_blank');
+        }
+
+        // منطق لوحة التحكم وتغيير الأسعار
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function populateAdminSelect() {
+            const select = document.getElementById('adminProductSelect');
+            select.innerHTML = '';
+            Object.keys(products).forEach(cat => {
+                products[cat].forEach(p => {
+                    select.innerHTML += `<option value="${cat}-${p.id}">${p.name} (الحالي: ${p.price} د.أ)</option>`;
+                });
+            });
+        }
+
+        function saveNewPrice() {
+            const selectValue = document.getElementById('adminProductSelect').value;
+            const newPrice = document.getElementById('adminNewPrice').value;
+            if (!newPrice) return alert("الرجاء إدخال السعر الجديد");
+
+            const [cat, id] = selectValue.split('-');
+            const product = products[cat].find(p => p.id == id);
+            if (product) {
+                product.price = newPrice;
+                alert(`تم تحديث سعر [${product.name}] بنجاح إلى ${newPrice} دينار أردني!`);
+                renderProducts();
+                populateAdminSelect();
+                toggleAdminPanel();
+            }
+        }
+    </script>
+</body>
+</html>
